@@ -7,13 +7,21 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
-import plotly.express as px
 import matplotlib.pyplot as plt
 
-# Load the pre-trained model
+# Use a relative path to load the model
 model_path = os.path.join(os.path.dirname(__file__), 'Gold-price-prediction.keras')
-st.write(f"Model path: {model_path}")
-model = load_model(model_path)
+
+# For debugging: Check if the file exists
+if not os.path.exists(model_path):
+    st.error(f"Model file not found at: {model_path}")
+else:
+    # Load the model
+    try:
+        model = load_model(model_path)
+        st.success("Model loaded successfully")
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
