@@ -1,28 +1,16 @@
-import os
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from keras.models import load_model
 import streamlit as st
-import tensorflow as tf
-from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
+import plotly.express as px
 import matplotlib.pyplot as plt
 
-# Use a relative path to load the model
-model_path = os.path.join(os.path.dirname(__file__), 'Gold-price-prediction.keras')
-
-# Check if the file exists
-if not os.path.exists(model_path):
-    st.error(f"Model file not found at: {model_path}")
-else:
-    # Load the model
-    try:
-        model = load_model(model_path)
-        st.success("Model loaded successfully")
-    except Exception as e:
-        st.error(f"Error loading model: {e}")
+# Load the pre-trained model
+model = load_model('Gold-price-prediction.keras', compile=False)
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
@@ -31,7 +19,9 @@ st.title('Stock Market Predictor')
 st.sidebar.header('Select Stock Symbol')
 stock_symbol = st.sidebar.text_input('Enter Stock Symbol', 'XAUT-USD')
 
+
 stock = stock_symbol
+
 start = '2012-01-01'
 end = datetime.today().strftime('%Y-%m-%d')
 data = yf.download(stock_symbol, start, end)
@@ -47,7 +37,37 @@ change = current_price - previous_close
 percentage_change = (change / previous_close) * 100
 
 st.metric(label="Current Price", value=f"${current_price:.2f}", delta=f"{change:.2f} ({percentage_change:.2f}%)")
+
 st.write(data)
+# # Add color to the volume bars
+# volume_colors = ['green' if data['Close'][i] > data['Close'][i-1] else 'red' for i in range(1, len(data))]
+# volume_colors.insert(0, 'grey')  # First day has no previous day to compare
+
+# # Plotly chart for time series data
+# fig = go.Figure()
+
+# fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Close'))
+# fig.add_trace(go.Bar(x=data['Date'], y=data['Volume'], name='Volume', marker_color=volume_colors, yaxis='y2', opacity=0.3))
+
+# fig.update_layout(
+#     title=f"{stock} Stock Chart & Stats",
+#     yaxis=dict(title='Price'),
+#     yaxis2=dict(title='Volume', overlaying='y', side='right'),
+#     xaxis=dict(title='Date'),
+#     legend=dict(x=0, y=1.0),
+#     margin=dict(l=0, r=0, t=40, b=0),
+#     hovermode='x',
+# )
+
+# fig.update_traces(
+#     hovertemplate="<b>Date</b>: %{x}<br><b>Price</b>: $%{y:.2f}<br><b>Volume</b>: %{y2}<extra></extra>",
+#     hoverlabel=dict(bgcolor="white")
+# )
+
+# # Display chart
+# st.plotly_chart(fig, use_container_width=True)
+
+
 
 # Section: Advanced Chart
 st.subheader("Advanced Chart")
@@ -58,6 +78,7 @@ tabs = st.tabs(tab_names)
 for i, tab in enumerate(tabs):
     with tab:
         if tab_names[i] == "1d":
+            # Use minute-level data for one day
             start_day = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
             end_day = datetime.now().strftime('%Y-%m-%d')
             day_data = yf.download(stock_symbol, start=start_day, end=end_day, interval='1m')
@@ -65,6 +86,8 @@ for i, tab in enumerate(tabs):
 
             if not day_data.empty:
                 fig = go.Figure()
+
+                # Add price line with conditional color
                 fig.add_trace(go.Scatter(
                     x=day_data.index, y=day_data['Close'], mode='lines',
                     line=dict(color='green' if day_data['Close'].iloc[-1] > day_data['Open'].iloc[-1] else 'red'),
@@ -72,6 +95,7 @@ for i, tab in enumerate(tabs):
                     hoverinfo='x+y'
                 ))
 
+                # Add volume bars
                 colors = ['green' if row['Close'] > row['Open'] else 'red' for index, row in day_data.iterrows()]
                 fig.add_trace(go.Bar(
                     x=day_data.index, y=day_data['Volume'], name='Volume',
@@ -108,6 +132,8 @@ for i, tab in enumerate(tabs):
             
             if not data_interval.empty:
                 fig = go.Figure()
+
+                # Add price line with conditional color
                 fig.add_trace(go.Scatter(
                     x=data_interval['Date'], y=data_interval['Close'], mode='lines',
                     line=dict(color='green' if data_interval['Close'].iloc[-1] > data_interval['Open'].iloc[-1] else 'red'),
@@ -115,6 +141,7 @@ for i, tab in enumerate(tabs):
                     hoverinfo='x+y'
                 ))
 
+                # Add volume bars
                 colors = ['green' if row['Close'] > row['Open'] else 'red' for index, row in data_interval.iterrows()]
                 fig.add_trace(go.Bar(
                     x=data_interval['Date'], y=data_interval['Volume'], name='Volume',
@@ -134,6 +161,7 @@ for i, tab in enumerate(tabs):
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.write("No data available for the selected period.")
+
 
 # Section: Plot moving averages
 with st.container():
@@ -165,6 +193,7 @@ with st.container():
         fig3.add_trace(go.Scatter(x=data['Date'], y=ma_200_days, mode='lines', name='MA200'))
         fig3.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Close Price'))
         st.plotly_chart(fig3, use_container_width=True)
+
 
 # Section: Predict the next 30 days
 window_size = 60
