@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -11,7 +12,6 @@ import matplotlib.pyplot as plt
 
 # Load the pre-trained model
 model_path = os.path.join(os.path.dirname(__file__), 'Gold-price-prediction.keras')
-st.write(f"Model path: {model_path}")
 model = load_model(model_path)
 
 st.set_page_config(layout="wide")
