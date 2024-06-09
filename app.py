@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import yfinance as yf
-import tensorflow as tf
 from keras.models import load_model
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
@@ -11,7 +10,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 
 # Load the pre-trained model
-model = tf.keras.models.load_model('Gold-price-prediction.keras')
+model = load_model('Gold-price-prediction.keras')
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
