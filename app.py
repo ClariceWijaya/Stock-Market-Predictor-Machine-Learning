@@ -10,7 +10,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 
 # Load the pre-trained model
-model = load_model('/Users/LEGION/OneDrive - Bina Nusantara (1)/Kuliah/kuliah/ML/Stock_Market_Prediction_ML/Gold-price-prediction.keras')
+model = load_model('/Gold-price-prediction.keras')
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
