@@ -11,7 +11,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 
 # Load the pre-trained model
-model = tf.keras.models.load_model('')
+model = tf.keras.models.load_model('Gold-price-prediction.keras')
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
