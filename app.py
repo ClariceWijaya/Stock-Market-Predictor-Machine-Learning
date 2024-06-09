@@ -2,8 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from keras.models import load_model
 import streamlit as st
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
