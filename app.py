@@ -189,8 +189,9 @@ predicted_prices = np.array(predicted_prices)
 # Section: Plot the historical data and the prediction
 st.subheader(f'Predicted {stock} Prices for the Next 30 Days')
 
+# Create a Plotly figure for historical data
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='HistoricalI've checked your GitHub repository. Here are the steps to ensure your Streamlit application works correctly:
+fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Historical Price', line=dict(color='blue')))
 
 # Add the predicted prices to the Plotly figure
 last_date = data['Date'].iloc[-1]
