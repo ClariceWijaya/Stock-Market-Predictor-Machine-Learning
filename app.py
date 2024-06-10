@@ -13,7 +13,7 @@ st.title('Stock Market Predictor')
 
 try:
     # Load the pre-trained model
-    model = load_model('Gold-price-prediction.h5', custom_objects={'CustomLayer': CustomLayer})
+    model = load_model('Gold-price-prediction.h5')
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
