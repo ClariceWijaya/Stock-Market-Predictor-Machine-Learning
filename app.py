@@ -1,31 +1,33 @@
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from keras.models import load_model
+from keras.models import model_from_json
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import os
 
 # Set page config
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
 
-# Log TensorFlow and Keras versions
+# Display TensorFlow and Keras versions
 st.write(f"TensorFlow version: {tf.__version__}")
 st.write(f"Keras version: {tf.keras.__version__}")
 
 # Attempt to load the pre-trained model
 model_loaded = False
 try:
-    model_path = 'Gold-price-prediction.keras'
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found: {model_path}")
+    # Load model architecture
+    with open("model_config.json", "r") as json_file:
+        model_json = json_file.read()
+    model = model_from_json(model_json)
 
-    model = load_model(model_path, compile=False)
+    # Load model weights
+    model.load_weights("Gold-price-prediction.weights.h5")
+
     model_loaded = True
     st.success("Model loaded successfully.")
 except FileNotFoundError as fnf_error:
@@ -34,6 +36,7 @@ except ImportError as import_error:
     st.error(f"Import error: {import_error}")
 except Exception as e:
     st.error(f"Error loading model: {e}")
+
 # Section: Get stock data
 st.sidebar.header('Select Stock Symbol')
 stock_symbol = st.sidebar.text_input('Enter Stock Symbol', 'XAUT-USD')
@@ -173,60 +176,63 @@ with st.container():
         st.plotly_chart(fig3, use_container_width=True)
 
 # Section: Predict the next 30 days
-window_size = 60
-scaler = MinMaxScaler(feature_range=(0, 1))
-data_scaled = scaler.fit_transform(data[['Close']])
+if model_loaded:
+    window_size = 60
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    data_scaled = scaler.fit_transform(data[['Close']])
 
-x_test = []
-x_test.append(data_scaled[-window_size:])
-x_test = np.array(x_test)
-x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    x_test = []
+    x_test.append(data_scaled[-window_size:])
+    x_test = np.array(x_test)
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
 
-predicted_prices = []
-for i in range(30):
-    predicted_price_scaled = model.predict(x_test).reshape(-1, 1)
-    predicted_price = scaler.inverse_transform(predicted_price_scaled)
-    predicted_prices.append(predicted_price[0, 0])
-    
-    new_scaled_value = predicted_price_scaled[0, 0].reshape(-1, 1, 1)
-    x_test = np.append(x_test[:, 1:, :], new_scaled_value, axis=1)
+    predicted_prices = []
+    for i in range(30):
+        predicted_price_scaled = model.predict(x_test).reshape(-1, 1)
+        predicted_price = scaler.inverse_transform(predicted_price_scaled)
+        predicted_prices.append(predicted_price[0, 0])
+        
+        new_scaled_value = predicted_price_scaled[0, 0].reshape(-1, 1, 1)
+        x_test = np.append(x_test[:, 1:, :], new_scaled_value, axis=1)
 
-predicted_prices = np.array(predicted_prices)
+    predicted_prices = np.array(predicted_prices)
 
-# Section: Plot the historical data and the prediction
-st.subheader(f'Predicted {stock_symbol} Prices for the Next 30 Days')
+    # Section: Plot the historical data and the prediction
+    st.subheader(f'Predicted {stock_symbol} Prices for the Next 30 Days')
 
-# Create a Plotly figure for historical data
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Historical Price', line=dict(color='blue')))
+    # Create a Plotly figure for historical data
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Historical Price', line=dict(color='blue')))
 
-# Add the predicted prices to the Plotly figure
-last_date = data['Date'].iloc[-1]
-future_dates = [last_date + timedelta(days=i) for i in range(1, 31)]
-fig.add_trace(go.Scatter(x=future_dates, y=predicted_prices, mode='lines', name='Predicted Prices', line=dict(color='red')))
+    # Add the predicted prices to the Plotly figure
+    last_date = data['Date'].iloc[-1]
+    future_dates = [last_date + timedelta(days=i) for i in range(1, 31)]
+    fig.add_trace(go.Scatter(x=future_dates, y=predicted_prices, mode='lines', name='Predicted Prices', line=dict(color='red')))
 
-fig.update_layout(title=f'{stock_symbol} Price History and Predicted Prices for the Next 30 Days',
-                  xaxis_title='Date', yaxis_title='Price',
-                  hovermode='x unified')
+    fig.update_layout(title=f'{stock_symbol} Price History and Predicted Prices for the Next 30 Days',
+                      xaxis_title='Date', yaxis_title='Price',
+                      hovermode='x unified')
 
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
-zoomed_data = data.tail(100)
-# Create a separate Plotly figure for the zoomed-in plot
-fig_zoom = go.Figure()
-fig_zoom.add_trace(go.Scatter(x=zoomed_data['Date'], y=zoomed_data['Close'], mode='lines', name='Historical Price', line=dict(color='blue')))
-fig_zoom.add_trace(go.Scatter(x=future_dates, y=predicted_prices, mode='lines', name='Predicted Prices', line=dict(color='red')))
+    zoomed_data = data.tail(100)
+    # Create a separate Plotly figure for the zoomed-in plot
+    fig_zoom = go.Figure()
+    fig_zoom.add_trace(go.Scatter(x=zoomed_data['Date'], y=zoomed_data['Close'], mode='lines', name='Historical Price', line=dict(color='blue')))
+    fig_zoom.add_trace(go.Scatter(x=future_dates, y=predicted_prices, mode='lines', name='Predicted Prices', line=dict(color='red')))
 
-fig_zoom.update_layout(title=f'{stock_symbol} Zoomed Price History and Predicted Prices for the Next 30 Days',
-                       xaxis_title='Date', yaxis_title='Price',
-                       hovermode='x unified')
+    fig_zoom.update_layout(title=f'{stock_symbol} Zoomed Price History and Predicted Prices for the Next 30 Days',
+                           xaxis_title='Date', yaxis_title='Price',
+                           hovermode='x unified')
 
-st.plotly_chart(fig_zoom, use_container_width=True)
+    st.plotly_chart(fig_zoom, use_container_width=True)
 
-# Display predicted prices in a scrollable table
-days = [f'Day {i+1}' for i in range(len(predicted_prices))]
-predicted_data = {'Day': days, 'Predicted Price (USD)': [f'${price:.2f}' for price in predicted_prices]}
-predicted_df = pd.DataFrame(predicted_data)
+    # Display predicted prices in a scrollable table
+    days = [f'Day {i+1}' for i in range(len(predicted_prices))]
+    predicted_data = {'Day': days, 'Predicted Price (USD)': [f'${price:.2f}' for price in predicted_prices]}
+    predicted_df = pd.DataFrame(predicted_data)
 
-st.write("### Predicted Prices:")
-st.dataframe(predicted_df)
+    st.write("### Predicted Prices:")
+    st.dataframe(predicted_df)
+else:
+    st.error("Model not loaded. Cannot perform predictions.")
