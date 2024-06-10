@@ -5,6 +5,7 @@ numpy>=1.23.5,<2.0.0
 pandas
 yfinance
 scikit-learn
+Cython
 streamlit
 plotly
 matplotlib
