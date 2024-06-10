@@ -1,22 +1,20 @@
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
+import plotly.express as px
 import matplotlib.pyplot as plt
+
+# Load the pre-trained model
+model = load_model('Gold-price-prediction.keras')
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
 
-model_loaded = False
-try:
-    model = load_model('Gold-price-prediction.h5')
-    model_loaded = True
-except Exception as e:
-    st.error(f"Error loading model: {e}")
 
 # Section: Get stock data
 st.sidebar.header('Select Stock Symbol')
