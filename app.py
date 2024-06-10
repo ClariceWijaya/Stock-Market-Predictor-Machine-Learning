@@ -11,9 +11,10 @@ import matplotlib.pyplot as plt
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
 
+model_loaded = False
 try:
-    # Load the pre-trained model
     model = load_model('Gold-price-prediction.h5')
+    model_loaded = True
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
