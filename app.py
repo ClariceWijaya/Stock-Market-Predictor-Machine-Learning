@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 try:
     # Load the pre-trained model
-    model = load_model('Gold-price-prediction.h5')
+    model = load_model('Gold-price-prediction.h5', compile=False)
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
