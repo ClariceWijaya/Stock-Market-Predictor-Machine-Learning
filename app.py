@@ -6,21 +6,34 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
-import plotly.express as px
 import matplotlib.pyplot as plt
+import tensorflow as tf
+import os
+
+# Set page config
+st.set_page_config(layout="wide")
+st.title('Stock Market Predictor')
+
+# Log TensorFlow and Keras versions
+st.write(f"TensorFlow version: {tf.__version__}")
+st.write(f"Keras version: {tf.keras.__version__}")
 
 # Attempt to load the pre-trained model
 model_loaded = False
 try:
-    model = load_model('Gold-price-prediction.keras', compile=False)
+    model_path = 'Gold-price-prediction.keras'
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+
+    model = load_model(model_path, compile=False)
     model_loaded = True
+    st.success("Model loaded successfully.")
+except FileNotFoundError as fnf_error:
+    st.error(f"File not found error: {fnf_error}")
+except ImportError as import_error:
+    st.error(f"Import error: {import_error}")
 except Exception as e:
     st.error(f"Error loading model: {e}")
-
-st.set_page_config(layout="wide")
-st.title('Stock Market Predictor')
-
-
 # Section: Get stock data
 st.sidebar.header('Select Stock Symbol')
 stock_symbol = st.sidebar.text_input('Enter Stock Symbol', 'XAUT-USD')
