@@ -9,8 +9,13 @@ import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
 
-# Load the pre-trained model
-model = load_model('Gold-price-prediction.keras', compile=False)
+# Attempt to load the pre-trained model
+model_loaded = False
+try:
+    model = load_model('Gold-price-prediction.keras', compile=False)
+    model_loaded = True
+except Exception as e:
+    st.error(f"Error loading model: {e}")
 
 st.set_page_config(layout="wide")
 st.title('Stock Market Predictor')
